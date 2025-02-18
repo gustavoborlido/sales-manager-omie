@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "55458481221",
+    "project_id": "sales-manager-omie",
+    "storage_bucket": "sales-manager-omie.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:55458481221:android:86ecc2ea879461ba368f2c",
+        "android_client_info": {
+          "package_name": "com.omie.salesmanager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "55458481221-4fj1sl68inlr55j4brfckboqojjubu9i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYPrdxyyahYkv5esj0CMCK1kiLiuHCjSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "55458481221-4fj1sl68inlr55j4brfckboqojjubu9i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
