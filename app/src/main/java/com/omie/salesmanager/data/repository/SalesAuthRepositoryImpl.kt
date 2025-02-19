@@ -6,11 +6,9 @@ import kotlinx.coroutines.tasks.await
 
 class SalesAuthRepositoryImpl(private val auth: FirebaseAuth): SalesAuthRepository {
     override suspend fun login(email: String, password: String): Result<String> {
-        return try {
+        return runCatching {
             auth.signInWithEmailAndPassword(email, password).await()
-            Result.success("Login bem-sucedido!")
-        } catch (e: Exception) {
-            Result.failure(e)
+            "Login bem-sucedido!"
         }
     }
 }

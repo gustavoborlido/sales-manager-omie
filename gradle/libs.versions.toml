@@ -32,6 +32,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref="firebaseBom" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-databse = { group = "com.google.firebase", name = "firebase-database" }
 koin-bom = { group = "io.insert-koin", name = "koin-bom", version.ref="koinBom" }
 koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose" }
 koin-viewmodel-compose = { group = "io.insert-koin", name = "koin-compose-viewmodel" }

@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.databse)
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.compose)
     implementation(libs.koin.viewmodel.compose)
