@@ -11,6 +11,11 @@ import com.omie.salesmanager.presentation.state.SalesLoginViewState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.FirebaseAuthException
 
 class SalesLoginViewModel(private val authRepository: SalesAuthRepository) : ViewModel() {
 
@@ -28,7 +33,16 @@ class SalesLoginViewModel(private val authRepository: SalesAuthRepository) : Vie
             result.onSuccess {
                 _loginState.value = SalesLoginViewState.Success
             }.onFailure { exception ->
-                _loginState.value = SalesLoginViewState.Error(exception.message ?: "Erro desconhecido")
+                val errorMessage = when (exception) {
+                    is FirebaseAuthInvalidUserException -> "Usuário não encontrado ou desativado."
+                    is FirebaseAuthInvalidCredentialsException -> "E-mail ou senha incorretos."
+                    is FirebaseTooManyRequestsException -> "Muitas tentativas falhas. Tente novamente mais tarde."
+                    is FirebaseNetworkException -> "Falha na conexão. Verifique sua internet."
+                    is FirebaseAuthException -> "Erro de autenticação: ${exception.message}"
+                    is IllegalArgumentException -> "Entrada inválida. Verifique os dados informados."
+                    else -> "Erro desconhecido."
+                }
+                _loginState.value = SalesLoginViewState.Error(errorMessage)
             }
         }
     }

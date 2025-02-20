@@ -4,6 +4,7 @@ import com.omie.salesmanager.data.model.SalesOrderItemDTO
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.omie.salesmanager.domain.model.SalesOrderModel
 import com.omie.salesmanager.domain.repository.SalesOrderRepository
 import com.omie.salesmanager.presentation.state.SalesOrderViewState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,7 @@ class SalesOrderViewModel(private val orderRepository: SalesOrderRepository) : V
     private val _orderState = MutableStateFlow<SalesOrderViewState>(SalesOrderViewState.Idle)
     val orderState: StateFlow<SalesOrderViewState> = _orderState.asStateFlow()
 
-    fun addOrder(orderItem: SalesOrderItemDTO) {
+    fun addOrder(orderItem: SalesOrderModel) {
         _orderState.value = SalesOrderViewState.Loading
 
         viewModelScope.launch {
