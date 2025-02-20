@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.omie.salesmanager.domain.model.SalesOrderModel
+import com.omie.salesmanager.domain.model.SalesItemModel
 import com.omie.salesmanager.presentation.state.SalesListViewState
 import com.omie.salesmanager.presentation.viewmodel.SalesListViewModel
 import com.omie.salesmanager.ui.theme.DarkBlue
@@ -29,7 +30,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SalesListView(navController: NavController) {
+fun SalesItemListView(navController: NavController, orderId: String) {
     val viewModel: SalesListViewModel = koinViewModel()
     val orderState by viewModel.listState.collectAsState()
 
@@ -42,18 +43,27 @@ fun SalesListView(navController: NavController) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Lista de Pedidos",
+                        "Lista de Itens",
                         color = White
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = DarkBlue
-                )
+                ),
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = White
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("SalesOrderView") },
+                onClick = { navController.navigate("SalesItemAddView/{$orderId}") },
                 containerColor = Green
             ) {
                 Icon(
@@ -62,14 +72,15 @@ fun SalesListView(navController: NavController) {
                     tint = DarkBlue
                 )
             }
-        }
-    ) { paddingValues ->
+        },
+
+        ) { paddingValues ->
         HandleListState(orderState, paddingValues)
     }
 }
 
 @Composable
-fun OrderItem(order: SalesOrderModel) {
+fun OrderItem(order: SalesItemModel) {
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
     Card(

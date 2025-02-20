@@ -1,10 +1,10 @@
 package com.omie.salesmanager.domain.model
 
 data class SalesOrderModel(
-    val productName: String,
-    val quantity: Int,
-    val value: Double
+    val description: String,
+    val clientName: String,
+    val items: List<SalesItemModel> = listOf()
 ) {
-    val totalValue: Double
-        get() = quantity * value
+    val totalOrderValue: Double
+        get() = items.sumOf { it.totalValue }
 }
