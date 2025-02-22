@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.koin.viewmodel.compose)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.play.services.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -66,4 +67,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
 }

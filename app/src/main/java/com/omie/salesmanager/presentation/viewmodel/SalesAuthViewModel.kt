@@ -46,4 +46,21 @@ class SalesAuthViewModel(private val authRepository: SalesAuthRepository) : View
             }
         }
     }
+
+    fun signInWithGoogle(idToken: String) {
+        _loginState.value = SalesAuthViewState.Loading
+
+        viewModelScope.launch {
+            val result = authRepository.signInWithGoogle(idToken)
+            result.onSuccess {
+                _loginState.value = SalesAuthViewState.Success
+            }.onFailure { exception ->
+                val errorMessage = when (exception) {
+                    is FirebaseAuthException -> "Erro de autenticação: ${exception.message}"
+                    else -> "Erro desconhecido."
+                }
+                _loginState.value = SalesAuthViewState.Error(errorMessage)
+            }
+        }
+    }
 }

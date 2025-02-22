@@ -13,6 +13,7 @@ googleServices = "4.4.2"
 firebaseBom = "33.9.0"
 koinBom = "4.0.2"
 systemuiController = "0.25.0"
+playServicesAuth = "20.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,6 +39,7 @@ firebase-databse = { group = "com.google.firebase", name = "firebase-database" }
 koin-bom = { group = "io.insert-koin", name = "koin-bom", version.ref="koinBom" }
 koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose" }
 koin-viewmodel-compose = { group = "io.insert-koin", name = "koin-compose-viewmodel" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref="playServicesAuth" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "55458481221",
+    "firebase_url": "https://sales-manager-omie-default-rtdb.firebaseio.com",
     "project_id": "sales-manager-omie",
     "storage_bucket": "sales-manager-omie.firebasestorage.app"
   },
