@@ -1,7 +1,7 @@
-package com.omie.salesmanager.data.model
+package com.omie.salesmanager.data.dto
 
 data class SalesOrderDTO(
     val description: String = "",
     val clientName: String = "",
-    val items: List<SalesItemDTO> = listOf()
+    val items: Map<String, SalesItemDTO> = mapOf()
 )

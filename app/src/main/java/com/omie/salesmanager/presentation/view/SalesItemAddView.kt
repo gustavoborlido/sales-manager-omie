@@ -1,12 +1,9 @@
 package com.omie.salesmanager.presentation.view
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavController
 import com.omie.salesmanager.domain.model.SalesItemModel
-import com.omie.salesmanager.presentation.viewmodel.SalesOrderAddItemViewModel
+import com.omie.salesmanager.presentation.viewmodel.SalesItemAddViewModel
 import com.omie.salesmanager.presentation.state.SalesOrderViewState
 import com.omie.salesmanager.ui.theme.DarkBlue
 import com.omie.salesmanager.ui.theme.Green
@@ -35,8 +32,12 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SalesItemAddView(navController: NavController, orderId: String) {
-    val viewModel: SalesOrderAddItemViewModel = koinViewModel()
+fun SalesItemAddView(
+    navController: NavController,
+    orderId: String,
+    snackbarHostState: SnackbarHostState
+) {
+    val viewModel: SalesItemAddViewModel = koinViewModel()
 
     var productName by remember { mutableStateOf(TextFieldValue("")) }
     var quantity by remember { mutableStateOf(TextFieldValue("")) }
@@ -54,96 +55,70 @@ fun SalesItemAddView(navController: NavController, orderId: String) {
         productNameFocusRequester.requestFocus()
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Cadastro de Itens",
-                        color = White
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = DarkBlue
-                ),
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
-                            tint = White
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LightBlue)
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(LightBlue)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 16.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = DarkBlue)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        ProductNameInput(
-                            productName,
-                            productNameFocusRequester,
-                            quantityFocusRequester
-                        ) { productName = it }
-                        QuantityInput(
-                            quantity,
-                            quantityFocusRequester,
-                            valueFocusRequester
-                        ) { quantity = it }
-                        PriceInput(value, valueFocusRequester) { value = it }
-                    }
-                }
-            }
-
-            Box(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(72.dp)
-                    .background(DarkBlue)
-                    .align(Alignment.BottomCenter)
+                    .padding(top = 16.dp, bottom = 16.dp),
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = DarkBlue)
             ) {
-
-                AddProductButton(
-                    orderId = orderId,
-                    productName = productName,
-                    quantity = quantity,
-                    value = value,
-                    viewModel = viewModel,
-                    orderState = orderState,
+                Column(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
                         .padding(16.dp)
-                )
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    ProductNameInput(
+                        productName,
+                        productNameFocusRequester,
+                        quantityFocusRequester
+                    ) { productName = it }
+                    QuantityInput(
+                        quantity,
+                        quantityFocusRequester,
+                        valueFocusRequester
+                    ) { quantity = it }
+                    PriceInput(value, valueFocusRequester) { value = it }
+                }
             }
-
-            HandleItemListState(orderState, context)
         }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp)
+                .background(DarkBlue)
+                .align(Alignment.BottomCenter)
+        ) {
+            AddProductButton(
+                orderId = orderId,
+                productName = productName,
+                quantity = quantity,
+                value = value,
+                viewModel = viewModel,
+                orderState = orderState,
+                snackbarHostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+        }
+
+        HandleItemAddState(orderState, navController, snackbarHostState)
     }
 }
 
@@ -285,16 +260,18 @@ fun AddProductButton(
     productName: TextFieldValue,
     quantity: TextFieldValue,
     value: TextFieldValue,
-    viewModel: SalesOrderAddItemViewModel,
+    viewModel: SalesItemAddViewModel,
     orderState: SalesOrderViewState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState
 ) {
-    val context = LocalContext.current
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Button(
         onClick = {
             if (productName.text.isNotEmpty() && quantity.text.isNotEmpty() && value.text.isNotEmpty()) {
                 val item = SalesItemModel(
+                    id = "",
                     productName = productName.text,
                     quantity = quantity.text.toInt(),
                     value = value.text.toDouble()
@@ -302,7 +279,7 @@ fun AddProductButton(
 
                 viewModel.addItem(item, orderId)
             } else {
-                Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
+                errorMessage = "Preencha todos os campos"
             }
         },
         modifier = modifier,
@@ -315,25 +292,35 @@ fun AddProductButton(
         if (orderState is SalesOrderViewState.Loading) {
             CircularProgressIndicator(color = Green, modifier = Modifier.size(24.dp))
         } else {
-            Text("Cadastrar")
+            Text("CADASTRAR")
+        }
+
+        errorMessage?.let {
+            LaunchedEffect(it) {
+                snackbarHostState.showSnackbar(it, duration = SnackbarDuration.Short)
+                errorMessage = null
+            }
         }
     }
 }
 
 @Composable
-fun HandleItemListState(
+fun HandleItemAddState(
     orderState: SalesOrderViewState,
-    context: android.content.Context,
+    navController: NavController,
+    snackbarHostState: SnackbarHostState
 ) {
     LaunchedEffect(orderState) {
         when (orderState) {
             is SalesOrderViewState.Success -> {
-                Toast.makeText(context, "Produto adicionado com sucesso!", Toast.LENGTH_SHORT)
-                    .show()
+                navController.popBackStack()
             }
 
             is SalesOrderViewState.Error -> {
-                Toast.makeText(context, orderState.message, Toast.LENGTH_SHORT).show()
+                snackbarHostState.showSnackbar(
+                    message = orderState.message,
+                    duration = SnackbarDuration.Short
+                )
             }
 
             else -> Unit

@@ -1,20 +1,17 @@
 package com.omie.salesmanager.data.mapper
 
-import com.omie.salesmanager.data.model.SalesItemDTO
-import com.omie.salesmanager.data.model.SalesOrderDTO
+import com.omie.salesmanager.data.dto.SalesItemDTO
+import com.omie.salesmanager.data.dto.SalesOrderDTO
 import com.omie.salesmanager.domain.model.SalesItemModel
 import com.omie.salesmanager.domain.model.SalesOrderModel
 
 fun SalesItemDTO.toDomain(): SalesItemModel {
     return SalesItemModel(
+        id = "",
         productName = this.productName,
         quantity = this.quantity,
         value = this.value
     )
-}
-
-fun List<SalesItemDTO>.toDomainList(): List<SalesItemModel> {
-    return this.map { it.toDomain() }
 }
 
 fun SalesItemModel.toDTO(): SalesItemDTO {
@@ -25,15 +22,20 @@ fun SalesItemModel.toDTO(): SalesItemDTO {
     )
 }
 
-fun List<SalesItemModel>.toDTOList(): List<SalesItemDTO> {
-    return this.map { it.toDTO() }
+fun Map<String, SalesItemDTO>.toDomainMap(): Map<String, SalesItemModel> {
+    return this.mapValues { it.value.toDomain() }
+}
+
+fun Map<String, SalesItemModel>.toDTOMap(): Map<String, SalesItemDTO> {
+    return this.mapValues { it.value.toDTO() }
 }
 
 fun SalesOrderDTO.toDomain(): SalesOrderModel {
     return SalesOrderModel(
+        id = "",
         clientName = this.clientName,
         description = this.description,
-        items = this.items.toDomainList()
+        items = this.items.toDomainMap()
     )
 }
 
@@ -41,6 +43,6 @@ fun SalesOrderModel.toDTO(): SalesOrderDTO {
     return SalesOrderDTO(
         description = this.description,
         clientName = this.clientName,
-        items = this.items.map { it.toDTO() }
+        items = this.items.toDTOMap()
     )
 }

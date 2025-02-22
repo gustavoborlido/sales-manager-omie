@@ -1,9 +1,7 @@
 package com.omie.salesmanager.presentation.view
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
@@ -13,8 +11,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.omie.salesmanager.presentation.state.SalesLoginViewState
-import com.omie.salesmanager.presentation.viewmodel.SalesLoginViewModel
+import com.omie.salesmanager.presentation.state.SalesAuthViewState
+import com.omie.salesmanager.presentation.viewmodel.SalesAuthViewModel
 import com.omie.salesmanager.ui.theme.DarkBlue
 import com.omie.salesmanager.ui.theme.Gray
 import com.omie.salesmanager.ui.theme.Green
@@ -23,10 +21,14 @@ import com.omie.salesmanager.ui.theme.White
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SalesAuthView(navController: NavController) {
-    val viewModel: SalesLoginViewModel = koinViewModel()
+fun SalesAuthView(
+    navController: NavController,
+    snackbarHostState: SnackbarHostState
+) {
+    val viewModel: SalesAuthViewModel = koinViewModel()
     val loginState by viewModel.loginState.collectAsState()
-    val context = LocalContext.current
+
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -59,7 +61,19 @@ fun SalesAuthView(navController: NavController) {
         }
     }
 
-    HandleLoginState(loginState, context, navController)
+    errorMessage?.let { message ->
+        LaunchedEffect(message) {
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            errorMessage = null
+        }
+    }
+
+    HandleLoginState(loginState, navController, onError = { message ->
+        errorMessage = message
+    })
 }
 
 @Composable
@@ -72,7 +86,7 @@ fun LoginHeader() {
 }
 
 @Composable
-fun EmailField(viewModel: SalesLoginViewModel) {
+fun EmailField(viewModel: SalesAuthViewModel) {
     OutlinedTextField(
         value = viewModel.email,
         onValueChange = { viewModel.email = it },
@@ -90,7 +104,7 @@ fun EmailField(viewModel: SalesLoginViewModel) {
 }
 
 @Composable
-fun PasswordField(viewModel: SalesLoginViewModel) {
+fun PasswordField(viewModel: SalesAuthViewModel) {
     OutlinedTextField(
         value = viewModel.password,
         onValueChange = { viewModel.password = it },
@@ -109,17 +123,17 @@ fun PasswordField(viewModel: SalesLoginViewModel) {
 }
 
 @Composable
-fun LoginButton(loginState: SalesLoginViewState, viewModel: SalesLoginViewModel) {
+fun LoginButton(loginState: SalesAuthViewState, viewModel: SalesAuthViewModel) {
     Button(
         onClick = { viewModel.login() },
         modifier = Modifier.fillMaxWidth(),
-        enabled = loginState !is SalesLoginViewState.Loading,
+        enabled = loginState !is SalesAuthViewState.Loading,
         colors = ButtonDefaults.buttonColors(
             contentColor = DarkBlue,
             containerColor = Green
         )
     ) {
-        if (loginState is SalesLoginViewState.Loading) {
+        if (loginState is SalesAuthViewState.Loading) {
             CircularProgressIndicator(color = Green, modifier = Modifier.size(24.dp))
         } else {
             Text("Entrar")
@@ -129,21 +143,23 @@ fun LoginButton(loginState: SalesLoginViewState, viewModel: SalesLoginViewModel)
 
 @Composable
 fun HandleLoginState(
-    loginState: SalesLoginViewState,
-    context: android.content.Context,
-    navController: NavController
+    loginState: SalesAuthViewState,
+    navController: NavController,
+    onError: (String) -> Unit
 ) {
     LaunchedEffect(loginState) {
         when (loginState) {
-            is SalesLoginViewState.Success -> {
-                navController.navigate("SalesListView"){
+            is SalesAuthViewState.Success -> {
+                navController.navigate("SalesOrderListView") {
                     popUpTo("SalesAuthView") { inclusive = true }
                 }
             }
-            is SalesLoginViewState.Error -> {
-                Toast.makeText(context, loginState.message, Toast.LENGTH_SHORT).show()
+
+            is SalesAuthViewState.Error -> {
+                onError(loginState.message)
             }
-            else -> {}
+
+            else -> Unit
         }
     }
 }

@@ -1,12 +1,9 @@
 package com.omie.salesmanager.presentation.view
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,17 +26,17 @@ import com.omie.salesmanager.ui.theme.LightBlue
 import com.omie.salesmanager.ui.theme.White
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SalesOrderAddView(navController: NavController) {
+fun SalesOrderAddView(
+    navController: NavController,
+    snackbarHostState: SnackbarHostState
+) {
     val viewModel: SalesOrderAddViewModel = koinViewModel()
 
     var descriptionOrder by remember { mutableStateOf(TextFieldValue("")) }
     var clientName by remember { mutableStateOf(TextFieldValue("")) }
 
     val orderState by viewModel.orderState.collectAsState()
-
-    val context = LocalContext.current
 
     val descriptionOrderFocusRequester = remember { FocusRequester() }
     val clientNameFocusRequester = remember { FocusRequester() }
@@ -48,95 +45,68 @@ fun SalesOrderAddView(navController: NavController) {
         descriptionOrderFocusRequester.requestFocus()
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Novo Pedido de Venda",
-                        color = White
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = DarkBlue
-                ),
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
-                            tint = White
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LightBlue)
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(LightBlue)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
+            Card(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, bottom = 16.dp),
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = DarkBlue)
             ) {
-                Card(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 16.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = DarkBlue)
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        OrderDescriptionInput(
-                            descriptionOrder,
-                            descriptionOrderFocusRequester,
-                            clientNameFocusRequester
-                        ) { descriptionOrder = it }
+                    OrderDescriptionInput(
+                        descriptionOrder,
+                        descriptionOrderFocusRequester,
+                        clientNameFocusRequester
+                    ) { descriptionOrder = it }
 
-                        OrderClientNameInput(clientName, clientNameFocusRequester) {
-                            clientName = it
-                        }
+                    OrderClientNameInput(clientName, clientNameFocusRequester) {
+                        clientName = it
                     }
                 }
             }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .background(DarkBlue)
-                    .align(Alignment.BottomCenter)
-            ) {
-
-                OrderAddButton(
-                    descriptionOrder = descriptionOrder,
-                    clientName = clientName,
-                    viewModel = viewModel,
-                    orderState = orderState,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                )
-            }
-
-            HandleOrderAddState(orderState, context, navController)
         }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp)
+                .background(DarkBlue)
+                .align(Alignment.BottomCenter)
+        ) {
+            OrderAddButton(
+                descriptionOrder = descriptionOrder,
+                clientName = clientName,
+                viewModel = viewModel,
+                orderState = orderState,
+                snackbarHostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+        }
+
+        HandleOrderAddState(orderState, navController, snackbarHostState)
     }
 }
-
 
 @Composable
 fun OrderDescriptionInput(
@@ -221,21 +191,22 @@ fun OrderAddButton(
     clientName: TextFieldValue,
     viewModel: SalesOrderAddViewModel,
     orderState: SalesOrderViewState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState
 ) {
-    val context = LocalContext.current
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Button(
         onClick = {
             if (descriptionOrder.text.isNotEmpty() && clientName.text.isNotEmpty()) {
-
                 val order = SalesOrderModel(
+                    id = "",
                     description = descriptionOrder.text,
                     clientName = clientName.text
                 )
                 viewModel.addOrder(order)
             } else {
-                Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
+                errorMessage = "Preencha todos os campos"
             }
         },
         modifier = modifier,
@@ -248,27 +219,38 @@ fun OrderAddButton(
         if (orderState is SalesOrderViewState.Loading) {
             CircularProgressIndicator(color = Green, modifier = Modifier.size(24.dp))
         } else {
-            Text("Avançar")
+            Text("AVANÇAR")
+        }
+    }
+
+    errorMessage?.let {
+        LaunchedEffect(it) {
+            snackbarHostState.showSnackbar(it, duration = SnackbarDuration.Short)
+            errorMessage = null
         }
     }
 }
 
+
 @Composable
 fun HandleOrderAddState(
     orderState: SalesOrderViewState,
-    context: android.content.Context,
-    navController: NavController
+    navController: NavController,
+    snackbarHostState: SnackbarHostState
 ) {
     LaunchedEffect(orderState) {
         when (orderState) {
             is SalesOrderViewState.Success -> {
-                navController.navigate("SalesItemListView/{${orderState.orderId}}"){
+                navController.navigate("SalesItemListView/${orderState.orderId}") {
                     popUpTo("SalesOrderAddView") { inclusive = true }
                 }
             }
 
             is SalesOrderViewState.Error -> {
-                Toast.makeText(context, orderState.message, Toast.LENGTH_SHORT).show()
+                snackbarHostState.showSnackbar(
+                    orderState.message,
+                    duration = SnackbarDuration.Short
+                )
             }
 
             else -> Unit

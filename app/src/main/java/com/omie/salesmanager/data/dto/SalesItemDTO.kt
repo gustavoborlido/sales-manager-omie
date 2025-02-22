@@ -1,4 +1,4 @@
-package com.omie.salesmanager.data.model
+package com.omie.salesmanager.data.dto
 
 data class SalesItemDTO(
     val productName: String = "",

@@ -6,8 +6,12 @@ import com.google.firebase.database.FirebaseDatabase
 
 abstract class SalesBaseRepository(
     protected val auth: FirebaseAuth,
-    protected val database: FirebaseDatabase  // Agora o FirebaseDatabase está disponível para as classes derivadas
+    protected val database: FirebaseDatabase
 ) {
+    protected fun generateUniqueKey(): String {
+        return database.reference.push().key ?: throw Exception("Falha ao gerar chave única")
+    }
+
     protected fun getUserId(): String {
         return auth.currentUser?.uid ?: throw Exception("Usuário não logado")
     }
