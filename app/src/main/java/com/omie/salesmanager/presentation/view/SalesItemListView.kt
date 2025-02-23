@@ -106,10 +106,6 @@ fun ItemListItem(item: SalesItemModel, onDelete: (SalesItemModel) -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .combinedClickable(
-                    onClick = { /* Do nothing */ },
-                    onLongClick = { showDialog = true }
-                )
                 .align(Alignment.CenterStart)
         ) {
             SalesListItemText(
@@ -139,6 +135,8 @@ fun ItemListItem(item: SalesItemModel, onDelete: (SalesItemModel) -> Unit) {
                 spacerBefore = false
             )
         }
+
+        SalesDeleteIconButton(Modifier.align(Alignment.CenterEnd)) { showDialog = true }
     }
 
     HorizontalDivider(

@@ -2,6 +2,7 @@ package com.omie.salesmanager.presentation.view
 
 import CurrencyUtils
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,6 +23,7 @@ import com.omie.salesmanager.R
 import com.omie.salesmanager.components.EmptyStateMessage
 import com.omie.salesmanager.components.SalesLoadingState
 import com.omie.salesmanager.components.SalesDeleteDialog
+import com.omie.salesmanager.components.SalesDeleteIconButton
 import com.omie.salesmanager.components.SalesErrorStateMessage
 import com.omie.salesmanager.components.SalesFloatingActionButton
 import com.omie.salesmanager.components.SalesListItemText
@@ -89,7 +91,6 @@ fun OrderList(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OrderItemList(
     order: SalesOrderModel,
@@ -101,13 +102,21 @@ fun OrderItemList(
     val clientLabel = stringResource(R.string.sales_order_client_label)
     val totalValueLabel = stringResource(R.string.sales_order_total_value_label)
 
+    val orderIdKey = stringResource(R.string.sales_order_id_key)
+
     Box(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .combinedClickable(
-                    onClick = { navController.navigate("SalesItemListView/${order.id}") },
-                    onLongClick = { showDialog = true }
+                .clickable(
+                    onClick = {
+                        navController.navigate(
+                            SalesScreenEnum.getRoute(
+                                SalesScreenEnum.SalesItemListView,
+                                params = mapOf(orderIdKey to order.id)
+                            )
+                        )
+                    }
                 )
                 .align(Alignment.CenterStart)
         ) {
@@ -132,6 +141,8 @@ fun OrderItemList(
                 spacerBefore = false
             )
         }
+
+        SalesDeleteIconButton(Modifier.align(Alignment.CenterEnd)) { showDialog = true }
     }
 
     HorizontalDivider(

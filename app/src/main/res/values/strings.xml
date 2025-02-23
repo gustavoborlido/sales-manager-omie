@@ -51,6 +51,7 @@
     <string name="sales_order_clear_description_text">Limpar texto</string>
     <string name="sales_item_add_description_button">Adicionar Item</string>
     <string name="sales_auth_google_description_icon">Ícone do Google</string>
+    <string name="sales_delete_item_description_icon">"Excluir Item"</string>
 
     <!-- Buttons -->
     <string name="sales_order_next_button">AVANÇAR</string>
