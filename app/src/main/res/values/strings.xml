@@ -1,4 +1,66 @@
 <resources>
     <string name="app_name">Sales Manager</string>
     <string name="default_web_client_id">55458481221-4fj1sl68inlr55j4brfckboqojjubu9i.apps.googleusercontent.com</string>
+
+
+    <!-- Labels Order -->
+    <string name="sales_order_create_button">Criar Pedido</string>
+    <string name="sales_order_client_label">Cliente:</string>
+    <string name="sales_order_total_value_label">Valor Total:</string>
+    <string name="sales_order_description_label">Descrição</string>
+    <string name="sales_order_client_add_label">Cliente</string>
+
+
+    <!-- Labels Item -->
+    <string name="sales_item_product_name_label">Nome do Produto</string>
+    <string name="sales_item_quantity_add_label">Quantidade</string>
+    <string name="sales_item_price_label">Valor</string>
+    <string name="sales_item_fill_all_fields_message">Preencha todos os campos</string>
+    <string name="sales_item_quantity_label">Quantidade:</string>
+    <string name="sales_item_unit_price_label">Valor Unitário:</string>
+    <string name="sales_item_total_price_label">Valor Total:</string>
+
+    <!-- Labels Auth -->
+    <string name="sales_auth_welcome">Gerenciador de Vendas</string>
+    <string name="sales_auth_email_label">E-mail</string>
+    <string name="sales_auth_password_label">Senha</string>
+
+    <!-- Mensagens -->
+    <string name="sales_order_empty_message">Nenhum pedido registrado</string>
+    <string name="sales_order_deleted_message">Pedido excluído com sucesso!</string>
+    <string name="sales_order_delete_error_message">Erro ao excluir pedido.</string>
+    <string name="sales_order_fill_all_fields_message">Preencha todos os campos.</string>
+    <string name="sales_item_empty_message">Ainda não há itens neste pedido.\nToque no botão para adicionar um!</string>
+    <string name="sales_item_deleted_message">Item excluído com sucesso</string>
+    <string name="sales_item_delete_error_message">Erro ao excluir item</string>
+    <string name="sales_item_error_message">Erro ao adicionar o item. Tente novamente.</string>
+    <string name="sales_item_success_message">Item adicionado com sucesso!</string>
+    <string name="sales_auth_google_error_message">Erro ao fazer login com o Google: %s</string>
+    <string name="sales_dialog_delete_title_message">"Excluir Item"</string>
+    <string name="sales_dialog_delete_subtitle_message">Tem certeza de que deseja excluir?</string>
+
+    <!-- Screens -->
+    <string name="sales_auth_title">Autenticação</string>
+    <string name="sales_order_list_title">Pedidos</string>
+    <string name="sales_order_add_title">Adicionar Pedido</string>
+    <string name="sales_item_list_title">Itens do Pedido</string>
+    <string name="sales_item_add_title">Adicionar Item</string>
+
+    <!-- Context Descriptions -->
+    <string name="sales_order_description_back_button">Voltar</string>
+    <string name="sales_order_clear_description_text">Limpar texto</string>
+    <string name="sales_item_add_description_button">Adicionar Item</string>
+    <string name="sales_auth_google_description_icon">Ícone do Google</string>
+
+    <!-- Buttons -->
+    <string name="sales_order_next_button">AVANÇAR</string>
+    <string name="sales_item_add_button">ADICIONAR</string>
+    <string name="sales_auth_login_button">ENTRAR</string>
+    <string name="sales_auth_google_button">ENTRAR COM GOOGLE</string>
+    <string name="sales_dialog_delete_button">EXCLUIR</string>
+    <string name="sales_dialog_cancel_button">CANCELAR</string>
+
+    <!-- Keys -->
+    <string name="sales_order_id_key">orderId</string>
+
 </resources>

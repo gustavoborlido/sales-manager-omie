@@ -1,6 +1,5 @@
 package com.omie.salesmanager.presentation.view
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,42 +9,41 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import com.omie.salesmanager.ui.theme.Gray
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavController
+import com.omie.salesmanager.R
+import com.omie.salesmanager.components.SalesClearIconButton
+import com.omie.salesmanager.components.SalesLoadingState
 import com.omie.salesmanager.domain.model.SalesItemModel
-import com.omie.salesmanager.presentation.viewmodel.SalesItemAddViewModel
 import com.omie.salesmanager.presentation.state.SalesOrderViewState
-import com.omie.salesmanager.ui.theme.DarkBlue
-import com.omie.salesmanager.ui.theme.Green
-import com.omie.salesmanager.ui.theme.LightBlue
+import com.omie.salesmanager.presentation.viewmodel.SalesItemAddViewModel
+import com.omie.salesmanager.ui.theme.Black
 import com.omie.salesmanager.ui.theme.White
+import com.omie.salesmanager.ui.theme.Dimens
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+private const val MAX_TEXT_LENGTH = 30
+private const val MAX_QUANTITY_LENGTH = 4
+private const val MAX_PRICE_LENGTH = 6
+
 @Composable
 fun SalesItemAddView(
     navController: NavController,
     orderId: String,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    viewModel: SalesItemAddViewModel = koinViewModel()
 ) {
-    val viewModel: SalesItemAddViewModel = koinViewModel()
-
     var productName by remember { mutableStateOf(TextFieldValue("")) }
     var quantity by remember { mutableStateOf(TextFieldValue("")) }
     var value by remember { mutableStateOf(TextFieldValue("")) }
 
     val orderState by viewModel.orderState.collectAsState()
-
-    val context = LocalContext.current
 
     val productNameFocusRequester = remember { FocusRequester() }
     val quantityFocusRequester = remember { FocusRequester() }
@@ -58,67 +56,83 @@ fun SalesItemAddView(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBlue)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(Dimens.Paddings.medium),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.Paddings.medium)
         ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 16.dp),
-                shape = MaterialTheme.shapes.medium,
-                colors = CardDefaults.cardColors(containerColor = DarkBlue)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    ProductNameInput(
-                        productName,
-                        productNameFocusRequester,
-                        quantityFocusRequester
-                    ) { productName = it }
-                    QuantityInput(
-                        quantity,
-                        quantityFocusRequester,
-                        valueFocusRequester
-                    ) { quantity = it }
-                    PriceInput(value, valueFocusRequester) { value = it }
-                }
-            }
+            ProductNameInput(
+                productName,
+                productNameFocusRequester,
+                quantityFocusRequester
+            ) { productName = it }
+
+            QuantityInput(
+                quantity,
+                quantityFocusRequester,
+                valueFocusRequester
+            ) { quantity = it }
+
+            PriceInput(value, valueFocusRequester) { value = it }
         }
 
-        Box(
+        val keyboardInsets = WindowInsets.ime.asPaddingValues()
+
+        AddProductButton(
+            orderId = orderId,
+            productName = productName,
+            quantity = quantity,
+            value = value,
+            viewModel = viewModel,
+            orderState = orderState,
+            snackbarHostState = snackbarHostState,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp)
-                .background(DarkBlue)
                 .align(Alignment.BottomCenter)
-        ) {
-            AddProductButton(
-                orderId = orderId,
-                productName = productName,
-                quantity = quantity,
-                value = value,
-                viewModel = viewModel,
-                orderState = orderState,
-                snackbarHostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                .fillMaxWidth()
+                .padding(keyboardInsets)
+        )
+
+        HandleItemAddState(orderState, navController, snackbarHostState)
+    }
+}
+
+@Composable
+fun HandleItemAddState(
+    orderState: SalesOrderViewState,
+    navController: NavController,
+    snackbarHostState: SnackbarHostState
+) {
+    when (orderState) {
+        is SalesOrderViewState.Loading -> SalesLoadingState()
+        is SalesOrderViewState.Success -> {
+            SuccessItemAddState(navController)
+        }
+
+        is SalesOrderViewState.Error -> {
+            ErrorItemAddState(
+                errorMessage = orderState.message,
+                snackbarHostState = snackbarHostState
             )
         }
 
-        HandleItemAddState(orderState, navController, snackbarHostState)
+        else -> Unit
+    }
+}
+
+@Composable
+fun SuccessItemAddState(navController: NavController) {
+    LaunchedEffect(Unit) {
+        navController.popBackStack()
+    }
+}
+
+@Composable
+fun ErrorItemAddState(errorMessage: String, snackbarHostState: SnackbarHostState) {
+    LaunchedEffect(errorMessage) {
+        snackbarHostState.showSnackbar(errorMessage, duration = SnackbarDuration.Short)
     }
 }
 
@@ -129,11 +143,11 @@ fun ProductNameInput(
     quantityFocusRequester: FocusRequester,
     onValueChange: (TextFieldValue) -> Unit
 ) {
-    OutlinedTextField(
+    TextField(
         value = productName,
         singleLine = true,
         onValueChange = {
-            if (it.text.length <= 30) {
+            if (it.text.length <= MAX_TEXT_LENGTH) {
                 onValueChange(it)
             }
         },
@@ -145,19 +159,18 @@ fun ProductNameInput(
                 quantityFocusRequester.requestFocus()
             }
         ),
-        label = { Text("Nome do Produto") },
+        label = { Text(stringResource(R.string.sales_item_product_name_label), color = White) },
+        colors = OutlinedTextFieldDefaults.colors(),
         maxLines = 1,
         modifier = Modifier
             .fillMaxWidth()
             .focusRequester(productNameFocusRequester),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = LightBlue,
-            focusedLabelColor = White,
-            unfocusedLabelColor = Gray,
-            unfocusedBorderColor = Gray,
-            cursorColor = LightBlue
-        ),
-        textStyle = TextStyle(color = White)
+        textStyle = TextStyle(color = White),
+        trailingIcon = {
+            if (productName.text.isNotEmpty()) {
+                SalesClearIconButton(onClick = { onValueChange(TextFieldValue("")) })
+            }
+        }
     )
 }
 
@@ -168,14 +181,14 @@ fun QuantityInput(
     valueFocusRequester: FocusRequester,
     onValueChange: (TextFieldValue) -> Unit
 ) {
-    OutlinedTextField(
+    TextField(
         value = quantity,
+        singleLine = true,
         onValueChange = {
-            if (it.text.isEmpty() || (it.text.toIntOrNull() != null && it.text.length <= 4)) {
+            if (it.text.isEmpty() || (it.text.toIntOrNull() != null && it.text.length <= MAX_QUANTITY_LENGTH)) {
                 onValueChange(it)
             }
         },
-        label = { Text("Quantidade") },
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Number
         ),
@@ -184,25 +197,18 @@ fun QuantityInput(
                 valueFocusRequester.requestFocus()
             }
         ),
+        label = { Text(stringResource(R.string.sales_item_quantity_add_label), color = White) },
+        colors = OutlinedTextFieldDefaults.colors(),
+        maxLines = 1,
         modifier = Modifier
             .fillMaxWidth()
-            .focusRequester(quantityFocusRequester)
-            .onKeyEvent {
-                if (it.key == Key.Enter) {
-                    valueFocusRequester.requestFocus()
-                    true
-                } else {
-                    false
-                }
-            },
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = LightBlue,
-            focusedLabelColor = White,
-            unfocusedLabelColor = Gray,
-            unfocusedBorderColor = Gray,
-            cursorColor = LightBlue
-        ),
-        textStyle = TextStyle(color = White)
+            .focusRequester(quantityFocusRequester),
+        textStyle = TextStyle(color = White),
+        trailingIcon = {
+            if (quantity.text.isNotEmpty()) {
+                SalesClearIconButton(onClick = { onValueChange(TextFieldValue("")) })
+            }
+        }
     )
 }
 
@@ -214,15 +220,15 @@ fun PriceInput(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    OutlinedTextField(
+    TextField(
         value = value,
+        singleLine = true,
         onValueChange = {
-            val regex = "^\\d{0,6}(\\.\\d{0,2})?$".toRegex()
+            val regex = "^\\d{0,$MAX_PRICE_LENGTH}(\\.\\d{0,2})?$".toRegex()
             if (it.text.isEmpty() || it.text.matches(regex)) {
                 onValueChange(it)
             }
         },
-        label = { Text("Valor") },
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Number
         ),
@@ -231,26 +237,18 @@ fun PriceInput(
                 keyboardController?.hide()
             }
         ),
+        label = { Text(stringResource(R.string.sales_item_price_label), color = White) },
+        colors = OutlinedTextFieldDefaults.colors(),
         maxLines = 1,
         modifier = Modifier
             .fillMaxWidth()
-            .focusRequester(valueFocusRequester)
-            .onKeyEvent {
-                if (it.key == Key.Enter) {
-                    keyboardController?.hide()
-                    true
-                } else {
-                    false
-                }
-            },
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = LightBlue,
-            focusedLabelColor = White,
-            unfocusedLabelColor = Gray,
-            unfocusedBorderColor = Gray,
-            cursorColor = LightBlue
-        ),
-        textStyle = TextStyle(color = White)
+            .focusRequester(valueFocusRequester),
+        textStyle = TextStyle(color = White),
+        trailingIcon = {
+            if (value.text.isNotEmpty()) {
+                SalesClearIconButton(onClick = { onValueChange(TextFieldValue("")) })
+            }
+        }
     )
 }
 
@@ -265,10 +263,15 @@ fun AddProductButton(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val fillAllFieldsMessage = stringResource(R.string.sales_item_fill_all_fields_message)
 
     Button(
         onClick = {
+            keyboardController?.hide()
             if (productName.text.isNotEmpty() && quantity.text.isNotEmpty() && value.text.isNotEmpty()) {
                 val item = SalesItemModel(
                     id = "",
@@ -276,54 +279,31 @@ fun AddProductButton(
                     quantity = quantity.text.toInt(),
                     value = value.text.toDouble()
                 )
-
                 viewModel.addItem(item, orderId)
             } else {
-                errorMessage = "Preencha todos os campos"
+                errorMessage = fillAllFieldsMessage
             }
         },
-        modifier = modifier,
+        modifier = modifier
+            .padding(Dimens.Paddings.medium),
         enabled = orderState !is SalesOrderViewState.Loading,
         colors = ButtonDefaults.buttonColors(
-            contentColor = DarkBlue,
-            containerColor = Green
-        )
+            contentColor = Black,
+        ),
+        shape = RectangleShape
     ) {
         if (orderState is SalesOrderViewState.Loading) {
-            CircularProgressIndicator(color = Green, modifier = Modifier.size(24.dp))
+            CircularProgressIndicator(modifier = Modifier.size(24.dp))
         } else {
-            Text("CADASTRAR")
+            Text(stringResource(R.string.sales_item_add_button))
         }
+    }
 
-        errorMessage?.let {
-            LaunchedEffect(it) {
-                snackbarHostState.showSnackbar(it, duration = SnackbarDuration.Short)
-                errorMessage = null
-            }
+    errorMessage?.let {
+        LaunchedEffect(it) {
+            snackbarHostState.showSnackbar(it, duration = SnackbarDuration.Short)
+            errorMessage = null
         }
     }
 }
 
-@Composable
-fun HandleItemAddState(
-    orderState: SalesOrderViewState,
-    navController: NavController,
-    snackbarHostState: SnackbarHostState
-) {
-    LaunchedEffect(orderState) {
-        when (orderState) {
-            is SalesOrderViewState.Success -> {
-                navController.popBackStack()
-            }
-
-            is SalesOrderViewState.Error -> {
-                snackbarHostState.showSnackbar(
-                    message = orderState.message,
-                    duration = SnackbarDuration.Short
-                )
-            }
-
-            else -> Unit
-        }
-    }
-}

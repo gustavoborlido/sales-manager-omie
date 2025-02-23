@@ -35,6 +35,8 @@ class SalesOrderListViewModel(private val orderRepository: SalesOrderRepository)
     }
 
     fun deleteOrder(orderId: String) {
+        _deleteState.value = SalesDeleteViewState.Idle
+
         viewModelScope.launch {
             val result = orderRepository.deleteOrder(orderId)
             result.onSuccess {

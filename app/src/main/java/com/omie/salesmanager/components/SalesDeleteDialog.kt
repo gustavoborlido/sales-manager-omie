@@ -8,30 +8,33 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
+import com.omie.salesmanager.R
+import com.omie.salesmanager.ui.theme.Black
+import com.omie.salesmanager.ui.theme.Dimens
 import com.omie.salesmanager.ui.theme.White
 
 @Composable
 fun SalesDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Excluir Item") },
-        text = { Text(text = "Tem certeza de que deseja excluir?") },
+        title = { Text(text = stringResource(R.string.sales_dialog_delete_title_message)) },
+        text = { Text(text = stringResource(R.string.sales_dialog_delete_subtitle_message)) },
         confirmButton = {
             Button(
                 onClick = onConfirm,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
             ) {
-                Text(text = "Excluir", color = White)
+                Text(text = stringResource(R.string.sales_dialog_delete_button), color = White)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Cancelar")
+                Text(text = stringResource(R.string.sales_dialog_cancel_button), color = Black)
             }
         },
         properties = DialogProperties(dismissOnClickOutside = false),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(Dimens.Size.small)
     )
 }

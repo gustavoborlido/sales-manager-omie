@@ -18,35 +18,37 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.omie.salesmanager.enum.SalesScreenEnum
 import com.omie.salesmanager.presentation.view.SalesAuthView
 import com.omie.salesmanager.presentation.view.SalesItemListView
 import com.omie.salesmanager.presentation.view.SalesItemAddView
 import com.omie.salesmanager.presentation.view.SalesOrderAddView
 import com.omie.salesmanager.presentation.view.SalesOrderListView
-import com.omie.salesmanager.ui.theme.DarkBlue
 import com.omie.salesmanager.ui.theme.SalesManagerTheme
 import com.omie.salesmanager.ui.theme.White
+import com.omie.salesmanager.ui.theme.Black
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             SalesManagerTheme {
                 val systemUiController = rememberSystemUiController()
-                systemUiController.setSystemBarsColor(color = DarkBlue)
+                systemUiController.setSystemBarsColor(color = White)
 
                 val navController = rememberNavController()
                 val snackbarHostState = remember { SnackbarHostState() }
@@ -56,89 +58,102 @@ class MainActivity : ComponentActivity() {
                 var showBackButton by remember { mutableStateOf(true) }
 
                 Scaffold(
-                    snackbarHost = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(bottom = 80.dp),
-                            contentAlignment = Alignment.BottomCenter
-                        ) {
-                            SnackbarHost(hostState = snackbarHostState)
-                        }
-                    },
+                    snackbarHost = { CustomSnackbarHost(snackbarHostState) },
+                    containerColor = Black,
                     topBar = {
-                        if (showTopBar) {
-                            CenterAlignedTopAppBar(
-                                title = {
-                                    Text(
-                                        topBarTitle,
-                                        color = White
-                                    )
-                                },
-                                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                                    containerColor = DarkBlue
-                                ),
-                                navigationIcon = {
-                                    if (showBackButton) {
-                                        IconButton(onClick = { navController.popBackStack() }) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                contentDescription = "Voltar",
-                                                tint = White
-                                            )
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                    }
+                        CustomTopBar(
+                            showTopBar = showTopBar,
+                            topBarTitle = topBarTitle,
+                            showBackButton = showBackButton,
+                            onBackButtonClick = { navController.popBackStack() }
+                        )
+                    },
                 ) { paddingValues ->
                     Box(modifier = Modifier.padding(paddingValues)) {
                         NavHost(
                             navController = navController,
-                            startDestination = "SalesAuthView"
+                            startDestination = SalesScreenEnum.SalesAuthView.route
                         ) {
-                            composable(route = "SalesAuthView") {
+                            composable(SalesScreenEnum.SalesAuthView.route) {
+                                SalesAuthView(navController, snackbarHostState)
                                 showTopBar = false
                                 showBackButton = false
-                                SalesAuthView(navController, snackbarHostState)
                             }
-
-                            composable(route = "SalesOrderListView") {
+                            composable(SalesScreenEnum.SalesOrderListView.route) {
+                                SalesOrderListView(navController, snackbarHostState)
                                 showTopBar = true
                                 showBackButton = false
-                                topBarTitle = "Pedidos"
-                                SalesOrderListView(navController, snackbarHostState)
+                                topBarTitle = stringResource(R.string.sales_order_list_title)
                             }
-
-                            composable(route = "SalesOrderAddView") {
+                            composable(SalesScreenEnum.SalesOrderAddView.route) {
+                                SalesOrderAddView(navController, snackbarHostState)
                                 showTopBar = true
                                 showBackButton = true
-                                topBarTitle = "Adicionar Pedido"
-                                SalesOrderAddView(navController, snackbarHostState)
+                                topBarTitle = stringResource(R.string.sales_order_add_title)
                             }
-
-                            composable(route = "SalesItemListView/{orderId}") { backStackEntry ->
-                                backStackEntry.arguments?.getString("orderId")?.let {
-                                    showTopBar = true
-                                    showBackButton = true
-                                    topBarTitle = "Itens do Pedido"
-                                    SalesItemListView(navController, it, snackbarHostState)
-                                }
+                            composable(SalesScreenEnum.SalesItemListView.route) { backStackEntry ->
+                                backStackEntry.arguments?.getString(stringResource(R.string.sales_order_id_key))
+                                    ?.let {
+                                        SalesItemListView(navController, it, snackbarHostState)
+                                        showTopBar = true
+                                        showBackButton = true
+                                        topBarTitle = stringResource(R.string.sales_item_list_title)
+                                    }
                             }
-
-                            composable(route = "SalesItemAddView/{orderId}") { backStackEntry ->
-                                backStackEntry.arguments?.getString("orderId")?.let {
-                                    showTopBar = true
-                                    showBackButton = true
-                                    topBarTitle = "Adicionar Item"
-                                    SalesItemAddView(navController, it, snackbarHostState)
-                                }
+                            composable(SalesScreenEnum.SalesItemAddView.route) { backStackEntry ->
+                                backStackEntry.arguments?.getString(stringResource(R.string.sales_order_id_key))
+                                    ?.let {
+                                        SalesItemAddView(navController, it, snackbarHostState)
+                                        showTopBar = true
+                                        showBackButton = true
+                                        topBarTitle = stringResource(R.string.sales_item_add_title)
+                                    }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun CustomSnackbarHost(snackbarHostState: SnackbarHostState) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 80.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        SnackbarHost(hostState = snackbarHostState)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomTopBar(
+    showTopBar: Boolean,
+    topBarTitle: String,
+    showBackButton: Boolean,
+    onBackButtonClick: () -> Unit
+) {
+    if (showTopBar) {
+        CenterAlignedTopAppBar(
+            title = { Text(topBarTitle, color = White) },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Black
+            ),
+            navigationIcon = {
+                if (showBackButton) {
+                    IconButton(onClick = onBackButtonClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.sales_order_description_back_button),
+                            tint = White
+                        )
+                    }
+                }
+            }
+        )
     }
 }

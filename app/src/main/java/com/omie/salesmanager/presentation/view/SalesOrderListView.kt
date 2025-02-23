@@ -1,13 +1,11 @@
 package com.omie.salesmanager.presentation.view
 
+import CurrencyUtils
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,71 +16,77 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import com.omie.salesmanager.R
+import com.omie.salesmanager.components.EmptyStateMessage
+import com.omie.salesmanager.components.SalesLoadingState
 import com.omie.salesmanager.components.SalesDeleteDialog
+import com.omie.salesmanager.components.SalesErrorStateMessage
+import com.omie.salesmanager.components.SalesFloatingActionButton
+import com.omie.salesmanager.components.SalesListItemText
 import com.omie.salesmanager.domain.model.SalesOrderModel
+import com.omie.salesmanager.enum.SalesScreenEnum
 import com.omie.salesmanager.presentation.state.SalesDeleteViewState
 import com.omie.salesmanager.presentation.state.SalesOrderListViewState
 import com.omie.salesmanager.presentation.viewmodel.SalesOrderListViewModel
-import com.omie.salesmanager.ui.theme.DarkBlue
-import com.omie.salesmanager.ui.theme.Green
-import com.omie.salesmanager.ui.theme.LightBlue
+import com.omie.salesmanager.ui.theme.Dimens
 import com.omie.salesmanager.ui.theme.White
 import org.koin.androidx.compose.koinViewModel
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun SalesOrderListView(
     navController: NavController,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    viewModel: SalesOrderListViewModel = koinViewModel()
 ) {
-    val viewModel: SalesOrderListViewModel = koinViewModel()
-    val orderState by viewModel.orderState.collectAsState()
-    val deleteState by viewModel.deleteState.collectAsState()
+    val orderListViewState by viewModel.orderState.collectAsState()
+    val deleteViewState by viewModel.deleteState.collectAsState()
+    val createOrderText = stringResource(R.string.sales_order_create_button)
 
     LaunchedEffect(Unit) {
         viewModel.resetDeleteState()
         viewModel.getOrders()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LightBlue)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            HandleOrderListState(
-                orderState = orderState,
-                paddingValues = PaddingValues(0.dp),
-                navController = navController,
-                viewModel = viewModel,
-                snackbarHostState = snackbarHostState
-            )
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        HandleOrderListState(
+            orderState = orderListViewState,
+            paddingValues = PaddingValues(Dimens.Paddings.none),
+            navController = navController,
+            viewModel = viewModel,
+        )
 
-        FloatingActionButton(
-            onClick = { navController.navigate("SalesOrderAddView") },
+        SalesFloatingActionButton(
+            onClick = { navController.navigate(SalesScreenEnum.SalesOrderAddView.route) },
+            contentDescription = createOrderText,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            containerColor = Green
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "Criar Pedido",
-                tint = DarkBlue
-            )
-        }
+                .padding(Dimens.Paddings.medium),
+        )
     }
 
-    HandleOrderDeleteState(deleteState, snackbarHostState)
+    HandleOrderDeleteState(deleteViewState, snackbarHostState)
+}
+
+@Composable
+fun OrderList(
+    orders: List<SalesOrderModel>,
+    navController: NavController,
+    viewModel: SalesOrderListViewModel,
+    paddingValues: PaddingValues
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
+        items(orders) { order ->
+            OrderItemList(order, navController) {
+                viewModel.deleteOrder(orderId = order.id)
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -92,35 +96,48 @@ fun OrderItemList(
     navController: NavController,
     onDelete: (SalesOrderModel) -> Unit
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     var showDialog by remember { mutableStateOf(false) }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-            .combinedClickable(
-                onClick = { navController.navigate("SalesItemListView/${order.id}") },
-                onLongClick = { showDialog = true }
-            ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkBlue)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
+    val clientLabel = stringResource(R.string.sales_order_client_label)
+    val totalValueLabel = stringResource(R.string.sales_order_total_value_label)
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { navController.navigate("SalesItemListView/${order.id}") },
+                    onLongClick = { showDialog = true }
+                )
+                .align(Alignment.CenterStart)
+        ) {
+            SalesListItemText(
                 text = order.description,
-                fontSize = 18.sp,
-                style = MaterialTheme.typography.titleMedium,
-                color = White
+                fontSize = Dimens.Fonts.medium,
+                textStyle = MaterialTheme.typography.titleMedium,
+                color = White,
+                spacerHeight = Dimens.spacerHeightMedium,
+                spacerAfter = true
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Cliente: ${order.clientName}", color = White)
-            Text(
-                text = "Valor Total: ${currencyFormatter.format(order.totalOrderValue)}",
-                color = White
+            SalesListItemText(
+                text = "$clientLabel ${order.clientName}",
+                color = White,
+                spacerHeight = Dimens.spacerHeightSmall,
+                spacerAfter = false
+            )
+            SalesListItemText(
+                text = "$totalValueLabel ${CurrencyUtils.formatCurrency(order.totalOrderValue)}",
+                color = White,
+                spacerHeight = Dimens.spacerHeightMedium,
+                spacerBefore = false
             )
         }
     }
+
+    HorizontalDivider(
+        thickness = Dimens.dividerThickness,
+        color = White.copy(alpha = 0.5f)
+    )
 
     if (showDialog) {
         SalesDeleteDialog(
@@ -138,73 +155,46 @@ fun HandleOrderListState(
     orderState: SalesOrderListViewState,
     paddingValues: PaddingValues,
     navController: NavController,
-    snackbarHostState: SnackbarHostState,
     viewModel: SalesOrderListViewModel
 ) {
     when (orderState) {
-        is SalesOrderListViewState.Loading -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(LightBlue),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Green)
-            }
-        }
+        is SalesOrderListViewState.Loading -> SalesLoadingState()
+        is SalesOrderListViewState.Success -> SuccessState(
+            orders = orderState.orders,
+            navController = navController,
+            viewModel = viewModel,
+            paddingValues = paddingValues
+        )
 
-        is SalesOrderListViewState.Success -> {
-            val orders = orderState.orders
-            if (orders.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(LightBlue),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Nenhum pedido registrado",
-                        color = DarkBlue,
-                        fontSize = 18.sp
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(LightBlue)
-                        .padding(paddingValues)
-                ) {
-                    items(orders) { order ->
-                        OrderItemList(order, navController) {
-                            viewModel.deleteOrder(orderId = order.id)
-                        }
-                    }
-                }
-            }
-        }
-
-        is SalesOrderListViewState.Error -> {
-            val errorMessage = orderState.message
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(LightBlue),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Erro: $errorMessage", color = MaterialTheme.colorScheme.error)
-            }
-        }
-
-        is SalesOrderListViewState.Deleted -> {
-            LaunchedEffect(Unit) {
-                snackbarHostState.showSnackbar("Pedido deletado com sucesso.")
-                viewModel.getOrders()
-            }
-        }
-
+        is SalesOrderListViewState.Error -> ErrorState(errorMessage = orderState.message)
         else -> Unit
     }
+}
+
+@Composable
+fun SuccessState(
+    orders: List<SalesOrderModel>,
+    navController: NavController,
+    viewModel: SalesOrderListViewModel,
+    paddingValues: PaddingValues
+) {
+    val emptyOrdersMessage = stringResource(R.string.sales_order_empty_message)
+
+    if (orders.isEmpty()) {
+        EmptyStateMessage(message = emptyOrdersMessage)
+    } else {
+        OrderList(
+            orders = orders,
+            navController = navController,
+            viewModel = viewModel,
+            paddingValues = paddingValues
+        )
+    }
+}
+
+@Composable
+fun ErrorState(errorMessage: String) {
+    SalesErrorStateMessage(errorMessage = errorMessage)
 }
 
 @Composable
@@ -212,18 +202,21 @@ fun HandleOrderDeleteState(
     deleteState: SalesDeleteViewState,
     snackbarHostState: SnackbarHostState,
 ) {
+    val orderDeletedMessage = stringResource(R.string.sales_order_deleted_message)
+    val orderDeleteErrorMessage = stringResource(R.string.sales_order_delete_error_message)
+
     LaunchedEffect(deleteState) {
         when (deleteState) {
             is SalesDeleteViewState.Success -> {
-                snackbarHostState.showSnackbar("Pedido excluído com sucesso")
-
+                snackbarHostState.showSnackbar(orderDeletedMessage)
             }
 
             is SalesDeleteViewState.Error -> {
-                snackbarHostState.showSnackbar("Erro ao excluir item")
+                snackbarHostState.showSnackbar(orderDeleteErrorMessage)
             }
 
             else -> Unit
         }
     }
 }
+
