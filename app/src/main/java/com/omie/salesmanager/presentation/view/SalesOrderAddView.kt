@@ -18,7 +18,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavController
 import com.omie.salesmanager.R
 import com.omie.salesmanager.components.SalesClearIconButton
-import com.omie.salesmanager.components.SalesLoadingState
 import com.omie.salesmanager.domain.model.SalesOrderModel
 import com.omie.salesmanager.enum.SalesScreenEnum
 import com.omie.salesmanager.presentation.state.SalesOrderViewState
@@ -97,7 +96,6 @@ fun HandleOrderAddState(
     val orderIdKey = stringResource(R.string.sales_order_id_key)
 
     when (orderState) {
-        is SalesOrderViewState.Loading -> SalesLoadingState()
         is SalesOrderViewState.Success -> {
             SuccessOrderAddState(
                 orderId = orderState.orderId,

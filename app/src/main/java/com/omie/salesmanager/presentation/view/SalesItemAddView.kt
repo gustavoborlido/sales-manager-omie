@@ -23,7 +23,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavController
 import com.omie.salesmanager.R
 import com.omie.salesmanager.components.SalesClearIconButton
-import com.omie.salesmanager.components.SalesLoadingState
 import com.omie.salesmanager.domain.model.SalesItemModel
 import com.omie.salesmanager.presentation.state.SalesOrderViewState
 import com.omie.salesmanager.presentation.viewmodel.SalesItemAddViewModel
@@ -114,7 +113,6 @@ fun HandleItemAddState(
     snackbarHostState: SnackbarHostState
 ) {
     when (orderState) {
-        is SalesOrderViewState.Loading -> SalesLoadingState()
         is SalesOrderViewState.Success -> {
             SuccessItemAddState(navController)
         }
