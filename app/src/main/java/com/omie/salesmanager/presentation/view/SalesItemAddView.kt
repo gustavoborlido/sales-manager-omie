@@ -1,5 +1,8 @@
 package com.omie.salesmanager.presentation.view
 
+import CurrencyUtils.createCurrencyVisualTransformation
+import CurrencyUtils.formatCurrency
+import CurrencyUtils.parseCurrencyToDouble
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,6 +15,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -30,7 +34,6 @@ import org.koin.androidx.compose.koinViewModel
 
 private const val MAX_TEXT_LENGTH = 30
 private const val MAX_QUANTITY_LENGTH = 4
-private const val MAX_PRICE_LENGTH = 6
 
 @Composable
 fun SalesItemAddView(
@@ -42,6 +45,7 @@ fun SalesItemAddView(
     var productName by remember { mutableStateOf(TextFieldValue("")) }
     var quantity by remember { mutableStateOf(TextFieldValue("")) }
     var value by remember { mutableStateOf(TextFieldValue("")) }
+    var price by remember { mutableDoubleStateOf(0.0) }
 
     val orderState by viewModel.orderState.collectAsState()
 
@@ -76,7 +80,10 @@ fun SalesItemAddView(
                 valueFocusRequester
             ) { quantity = it }
 
-            PriceInput(value, valueFocusRequester) { value = it }
+            PriceInput(value, valueFocusRequester) { newValue, newPrice ->
+                value = newValue
+                price = newPrice
+            }
         }
 
         val keyboardInsets = WindowInsets.ime.asPaddingValues()
@@ -86,6 +93,7 @@ fun SalesItemAddView(
             productName = productName,
             quantity = quantity,
             value = value,
+            price = price,
             viewModel = viewModel,
             orderState = orderState,
             snackbarHostState = snackbarHostState,
@@ -216,26 +224,29 @@ fun QuantityInput(
 fun PriceInput(
     value: TextFieldValue,
     valueFocusRequester: FocusRequester,
-    onValueChange: (TextFieldValue) -> Unit
+    onValueChange: (TextFieldValue, Double) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
     TextField(
         value = value,
         singleLine = true,
-        onValueChange = {
-            val regex = "^\\d{0,$MAX_PRICE_LENGTH}(\\.\\d{0,2})?$".toRegex()
-            if (it.text.isEmpty() || it.text.matches(regex)) {
-                onValueChange(it)
-            }
+        onValueChange = { newValue ->
+            val numericValue = parseCurrencyToDouble(newValue.text)
+            val formattedText = formatCurrency(numericValue)
+
+            val updatedValue = TextFieldValue(
+                text = formattedText,
+                selection = TextRange(formattedText.length)
+            )
+
+            onValueChange(updatedValue, numericValue)
         },
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Number
         ),
         keyboardActions = KeyboardActions(
-            onDone = {
-                keyboardController?.hide()
-            }
+            onDone = { keyboardController?.hide() }
         ),
         label = { Text(stringResource(R.string.sales_item_price_label), color = White) },
         colors = OutlinedTextFieldDefaults.colors(),
@@ -246,9 +257,10 @@ fun PriceInput(
         textStyle = TextStyle(color = White),
         trailingIcon = {
             if (value.text.isNotEmpty()) {
-                SalesClearIconButton(onClick = { onValueChange(TextFieldValue("")) })
+                SalesClearIconButton(onClick = { onValueChange(TextFieldValue(""), 0.0) })
             }
-        }
+        },
+        visualTransformation = createCurrencyVisualTransformation()
     )
 }
 
@@ -258,6 +270,7 @@ fun AddProductButton(
     productName: TextFieldValue,
     quantity: TextFieldValue,
     value: TextFieldValue,
+    price: Double,
     viewModel: SalesItemAddViewModel,
     orderState: SalesOrderViewState,
     modifier: Modifier = Modifier,
@@ -277,7 +290,7 @@ fun AddProductButton(
                     id = "",
                     productName = productName.text,
                     quantity = quantity.text.toInt(),
-                    value = value.text.toDouble()
+                    value = price
                 )
                 viewModel.addItem(item, orderId)
             } else {
@@ -306,4 +319,3 @@ fun AddProductButton(
         }
     }
 }
-
