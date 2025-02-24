@@ -8,7 +8,7 @@ abstract class SalesBaseRepository(
     protected val auth: FirebaseAuth,
     protected val database: FirebaseDatabase
 ) {
-    protected fun generateUniqueKey(): String {
+    fun generateUniqueKey(): String {
         return database.reference.push().key ?: throw Exception("Falha ao gerar chave única")
     }
 

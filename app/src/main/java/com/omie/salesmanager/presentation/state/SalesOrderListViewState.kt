@@ -7,5 +7,4 @@ sealed class SalesOrderListViewState {
     data object Loading : SalesOrderListViewState()
     data class Success(val orders: List<SalesOrderModel>) : SalesOrderListViewState()
     data class Error(val message: String) : SalesOrderListViewState()
-//    data object Deleted : SalesOrderListViewState()
 }
